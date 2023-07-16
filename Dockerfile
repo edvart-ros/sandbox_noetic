@@ -1,4 +1,4 @@
-ARG FROM_IMAGE=ros:humble
+ARG FROM_IMAGE=ros:noetic
 
 # multi-stage for building
 FROM $FROM_IMAGE AS builder
@@ -6,10 +6,7 @@ FROM $FROM_IMAGE AS builder
 # install ros dependencies
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
-      ros-$ROS_DISTRO-aws-robomaker-small-warehouse-world \
       ros-$ROS_DISTRO-foxglove-bridge \
-      ros-$ROS_DISTRO-nav2-bringup \
-      ros-$ROS_DISTRO-rviz2 \
       ros-$ROS_DISTRO-turtlebot3-description \
       ros-$ROS_DISTRO-turtlebot3-simulations \
     && rm -rf /var/lib/apt/lists/*
@@ -46,7 +43,7 @@ RUN mkdir -p $ROOT_SRV
 RUN apt-get install -y --no-install-recommends \
       imagemagick \
       libboost-all-dev \
-      libgazebo-dev \
+      libgazebo11-dev \
       libgts-dev \
       libjansson-dev \
       libtinyxml-dev \
@@ -57,6 +54,7 @@ RUN apt-get install -y --no-install-recommends \
 
 # clone gzweb
 ENV GZWEB_WS /opt/gzweb
+RUN apt install -y git
 RUN git clone https://github.com/osrf/gzweb.git $GZWEB_WS
 
 # setup gzweb
@@ -91,3 +89,8 @@ RUN mkdir -p $ROOT_SRV/media && cd /tmp && \
     export ICONS="icons.tar.gz" && wget https://github.com/ros-planning/navigation2/files/11506823/$ICONS && \
     echo "cae5e2a5230f87b004c8232b579781edb4a72a7431405381403c6f9e9f5f7d41 $ICONS" | sha256sum -c && \
     tar xvz -C $ROOT_SRV/media -f $ICONS && rm $ICONS
+
+
+# source ros and gazebo in .bashrc file
+RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc && \
+    echo "source /usr/share/gazebo/setup.sh" >> ~/.bashrc
